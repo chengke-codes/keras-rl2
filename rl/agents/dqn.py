@@ -99,9 +99,9 @@ class DQNAgent(AbstractDQNAgent):
             `naive`: Q(s,a;theta) = V(s;theta) + A(s,a;theta)
     """
     def __init__(self, model, policy=None, test_policy=None, enable_double_dqn=False, enable_dueling_network=False,
-                 dueling_type='avg', *args, **kwargs):
+                 dueling_type='avg', terminal_no_future=True, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        self.terminal_no_future = terminal_no_future
         # Validate (important) input.
         if list(model.output.shape) != list((None, self.nb_actions)):
             raise ValueError(f'Model output "{model.output}" has invalid shape. DQN expects a model that has one dimension for each action, in this case {self.nb_actions}.')
@@ -261,7 +261,10 @@ class DQNAgent(AbstractDQNAgent):
                 state1_batch.append(e.state1)
                 reward_batch.append(e.reward)
                 action_batch.append(e.action)
-                terminal1_batch.append(0. if e.terminal1 else 1.)
+                if self.terminal_no_future:
+                    terminal1_batch.append(0. if e.terminal1 else 1.)
+                else:
+                    terminal1_batch.append(1.)
 
             # Prepare and validate parameters.
             state0_batch = self.process_state_batch(state0_batch)
